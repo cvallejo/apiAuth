@@ -32,10 +32,10 @@ class AuthController extends Controller
             'email'    => $request->email,
             'password' => bcrypt($request->password),
         ]);
-        
+
         $user->save();
 
-        return response()->json(['message' => 'Successfully created user!',], 201);
+        return response()->json(['message' => 'Successfully created user!'], 201);
     }
 
     /**
@@ -59,7 +59,7 @@ class AuthController extends Controller
 
         $credentials = request(['email', 'password']);
         if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Unauthorized',], 401);
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $user = $request->user();
@@ -88,7 +88,7 @@ class AuthController extends Controller
     {
         $request->user()->token()->revoke();
 
-        return response()->json(['message' => 'Successfully logged out',]);
+        return response()->json(['message' => 'Successfully logged out']);
     }
 
     /**
