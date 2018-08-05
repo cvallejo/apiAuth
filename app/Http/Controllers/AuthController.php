@@ -41,6 +41,7 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Usuario creado existosamente!'], 201);
     }
+
     /**
      * Login user and create token.
      *
@@ -121,5 +122,4 @@ class AuthController extends Controller
 
         return $user;
     }
-
 }
