@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\SignupActivate;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Notifications\SignupActivate;
 
 class AuthController extends Controller
 {
@@ -32,13 +32,13 @@ class AuthController extends Controller
             'name'              => $request->name,
             'email'             => $request->email,
             'password'          => bcrypt($request->password),
-            'activation_token'  => str_random(60)
+            'activation_token'  => str_random(60),
         ]);
 
         $user->save();
 
         $user->notify(new SignupActivate($user));
-        
+
         return response()->json(['message' => 'Usuario creado existosamente!'], 201);
     }
     /**
