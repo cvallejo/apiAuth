@@ -6,6 +6,7 @@ use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\SignupActivate;
 
 class AuthController extends Controller
 {
@@ -22,22 +23,24 @@ class AuthController extends Controller
     public function signup(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string',
-            'email'    => 'required|string|email|unique:users',
-            'password' => 'required|string|confirmed',
+            'name'      => 'required|string',
+            'email'     => 'required|string|email|unique:users',
+            'password'  => 'required|string|confirmed',
         ]);
 
         $user = new User([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => bcrypt($request->password),
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'password'          => bcrypt($request->password),
+            'activation_token'  => str_random(60)
         ]);
 
         $user->save();
 
-        return response()->json(['message' => 'Successfully created user!'], 201);
+        $user->notify(new SignupActivate($user));
+        
+        return response()->json(['message' => 'Usuario creado existosamente!'], 201);
     }
-
     /**
      * Login user and create token.
      *
@@ -58,12 +61,15 @@ class AuthController extends Controller
         ]);
 
         $credentials = request(['email', 'password']);
+        $credentials['active'] = 1;
+        $credentials['deleted_at'] = null;
+        
         if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json(['message' => 'No Autorizado'], 401);
         }
 
         $user = $request->user();
-        $tokenResult = $user->createToken('Personal Access Token');
+        $tokenResult = $user->createToken('Token Acceso Personal');
         $token = $tokenResult->token;
 
         if ($request->remember_me) {
@@ -100,4 +106,20 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+
+    public function signupActivate($token)
+    {
+        $user = User::where('activation_token', $token)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'El token de activación es inválido'], 404);
+        }
+
+        $user->active = true;
+        $user->activation_token = '';
+        $user->save();
+
+        return $user;
+    }
+
 }
